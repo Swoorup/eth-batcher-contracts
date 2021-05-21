@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 /* SplitSend contract for executing arbitary contract function calls + send value in a single transaction */
-/* Swoorup @ AlphaWallet 2021 */
+/* Swoorup Joshi 2021 */
 
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;

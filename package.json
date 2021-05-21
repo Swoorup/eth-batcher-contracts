@@ -1,5 +1,5 @@
 {
-  "name": "eth-batcher-contracts",
+  "name": "@swoorup/eth-batcher-contracts",
   "version": "0.0.1",
   "description": "Set of solidity contracts to do batching payments",
   "main": "index.js",
@@ -10,8 +10,8 @@
     "type": "git",
     "url": "git+https://github.com/Swoorup/eth-batcher-contracts.git"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Swoorup Joshi",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/Swoorup/eth-batcher-contracts/issues"
   },
@@ -32,5 +32,11 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.1.0"
-  }
+  },
+  "directories": {
+    "test": "test"
+  },
+  "keywords": [
+    "solidity"
+  ]
 }
