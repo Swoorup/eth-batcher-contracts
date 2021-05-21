@@ -47,12 +47,14 @@ contract SplitSend is Ownable, ReentrancyGuard {
    * @param targetContract address of target contract to call
    * @param targetMessage payload containing function and parameters to the target contract address
    * @param _payments array of payment data containing the amount and beneficiary to transfer value to
+   * @dev Must be nonRentrant to prevent bugs described in https://consensys.net/diligence/blog/2019/09/stop-using-soliditys-transfer-now/
    */
   function sendEtherToMultipleBeneficiaries(address targetContract, bytes calldata targetMessage, Payment[] calldata _payments) external payable nonReentrant {
     uint256 _ethSentTotal = 0;
 
     for (uint256 i = 0; i < _payments.length; i++) {
-      _payments[i].beneficiary.transfer(_payments[i].amount);
+      (bool paymentSuccess,) = _payments[i].beneficiary.call{ value: _payments[i].amount }("");
+      if (!paymentSuccess) revert('Failed to make payment.');
       _ethSentTotal = _ethSentTotal.add(_payments[i].amount);
     }
 
