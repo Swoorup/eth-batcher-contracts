@@ -57,7 +57,7 @@ contract SplitSend is Ownable, ReentrancyGuard {
     }
 
     // Revert if the wrong amount of ETH was sent
-    require(msg.value != _ethSentTotal, "sendEtherToMultipleBeneficiaries: Invalid ETH sent");
+    require(msg.value == _ethSentTotal, "amount sent not equal to payments amount sum");
 
     // execute the payload on the target contract
     (bool success,) = targetContract.call(targetMessage);
