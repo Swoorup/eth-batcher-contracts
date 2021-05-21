@@ -1,5 +1,5 @@
 {
-  "name": "@swoorup/eth-batcher-contracts",
+  "name": "@sytherax/eth-batcher-contracts",
   "version": "0.0.1",
   "description": "Set of solidity contracts to do batching payments",
   "main": "index.js",
