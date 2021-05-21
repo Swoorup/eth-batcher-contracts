@@ -1,6 +1,6 @@
 {
   "name": "@sytherax/eth-batcher-contracts",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Set of solidity contracts to do batching payments",
   "main": "index.js",
   "scripts": {
