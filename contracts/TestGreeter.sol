@@ -11,4 +11,8 @@ contract TestGreeter {
   function greet(string memory who) public view {
     console.log("Hello", who);
   }
+  
+  function fail() public pure  {
+    revert("Failed to greet");
+  }
 }

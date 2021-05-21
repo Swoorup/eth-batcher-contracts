@@ -5,6 +5,7 @@ import { PayableOverrides } from "@ethersproject/contracts";
 import { BigNumber, Contract } from "ethers";
 
 const MAX_UINT256 = ethers.constants.MaxUint256;
+const parseEther = ethers.utils.parseEther;
 
 describe("SplitSend", function () {
     let owner: SignerWithAddress;
@@ -15,6 +16,7 @@ describe("SplitSend", function () {
 
     const greetInterface = new ethers.utils.Interface([
         "function greet(string memory who) public view",
+        "function fail() public pure",
     ]);
 
     beforeEach(async function () {
@@ -28,93 +30,72 @@ describe("SplitSend", function () {
         await testGreeter.deployed();
     });
 
-    describe("Split Ethers", () => {
-        it("Insufficient Ether splitting", async function () {
-            const payments = [addr1, addr2].map((a) => ({
-                beneficiary: a.address,
-                amount: ethers.utils.parseEther("100"),
-            }));
+    describe("Test splitting Ethers", () => {
+        it("Try sending insufficient ether amount lesser than sum of beneficiaries payment amount", async function () {
+            const payments = [addr1, addr2].map((addr) => ({ beneficiary: addr.address, amount: parseEther("100"), }));
+            const overrides: PayableOverrides = { value: parseEther("100"), };
 
-            const overrides: PayableOverrides = {
-                value: ethers.utils.parseEther("100"),
-            };
+            const initialBalances = await Promise.all([addr1.getBalance(), addr2.getBalance(), ]);
+            await expect(splitSend.sendEtherToMultipleBeneficiaries(
+                testGreeter.address,
+                greetInterface.encodeFunctionData("greet", ["WOZAK"]),
+                payments,
+                overrides
+            )).to.be.revertedWith("Failed to make payment");
 
-            const initialBalances = await Promise.all([
-                addr1.getBalance(),
-                addr2.getBalance(),
-            ]);
-            await expect(
-                splitSend.sendEtherToMultipleBeneficiaries(
-                    greetInterface.encodeFunctionData("greet", ["WOZAK"]),
-                    testGreeter.address,
-                    payments,
-                    overrides
-                )
-            ).to.be.reverted;
-            const finalBalances = await Promise.all([
-                addr1.getBalance(),
-                addr2.getBalance(),
-            ]);
-            const difference = finalBalances.map((v, i) =>
-                v.sub(initialBalances[i])
-            );
-            expect(difference).to.eql(
-                ["0", "0"].map(ethers.utils.parseEther)
-            );
+            const finalBalances = await Promise.all([ addr1.getBalance(), addr2.getBalance(), ]);
+
+            const difference = finalBalances.map((v, i) => v.sub(initialBalances[i]));
+            expect(difference).to.eql(["0", "0"].map(parseEther));
         });
 
-        it("Evenly split Ether successfully", async function () {
+        it("Try sending excess ether amount greater than sum of beneficiaries payment amount", async function () {
+            const payments = [addr1, addr2].map((addr) => ({ beneficiary: addr.address, amount: parseEther("1"), }));
+
+            // value sent should be 2 instead, but we try to send 10 ethers
+            const overrides: PayableOverrides = { value: parseEther("10"), };
+
+            const initialBalances = await Promise.all([addr1.getBalance(), addr2.getBalance(), ]);
+            await expect(splitSend.sendEtherToMultipleBeneficiaries(
+                testGreeter.address,
+                greetInterface.encodeFunctionData("greet", ["WOZAK"]),
+                payments,
+                overrides
+            )).to.be.revertedWith("amount sent not equal to payments amount sum");
+
+            const finalBalances = await Promise.all([ addr1.getBalance(), addr2.getBalance(), ]);
+
+            const difference = finalBalances.map((v, i) => v.sub(initialBalances[i]));
+            expect(difference).to.eql(["0", "0"].map(parseEther));
+        });
+
+        it("Try to evenly split 200 ethers to 2 beneficiaries", async function () {
             const payments = [addr1, addr2].map((a) => ({
                 beneficiary: a.address,
-                amount: ethers.utils.parseEther("100"),
+                amount: parseEther("100"),
             }));
 
-            const overrides: PayableOverrides = {
-                value: ethers.utils.parseEther("200.1"),
-            };
-
-            const initialBalances = await Promise.all([
-                addr1.getBalance(),
-                addr2.getBalance(),
-            ]);
+            const overrides: PayableOverrides = { value: parseEther("200"), };
+            const initialBalances = await Promise.all([ addr1.getBalance(), addr2.getBalance(), ]);
             await splitSend.sendEtherToMultipleBeneficiaries(
                 testGreeter.address,
                 greetInterface.encodeFunctionData("greet", ["WOZAK"]),
                 payments,
                 overrides
             );
-            const finalBalances = await Promise.all([
-                addr1.getBalance(),
-                addr2.getBalance(),
-            ]);
-            const difference = finalBalances.map((v, i) =>
-                v.sub(initialBalances[i])
-            );
-            expect(difference).to.eql(
-                ["100", "100"].map(ethers.utils.parseEther)
-            );
+            const finalBalances = await Promise.all([ addr1.getBalance(), addr2.getBalance(), ]);
+            const difference = finalBalances.map((v, i) => v.sub(initialBalances[i]));
+            expect(difference).to.eql(["100", "100"].map(parseEther));
         });
 
-        it("Unevenly split 150 Ethers", async function () {
+        it("Try to unevenly split 200 ethers to 2 beneficiaries", async function () {
             const payments = [
-                {
-                    beneficiary: addr1.address,
-                    amount: ethers.utils.parseEther("50"),
-                },
-                {
-                    beneficiary: addr2.address,
-                    amount: ethers.utils.parseEther("100"),
-                },
+                { beneficiary: addr1.address, amount: parseEther("50"), },
+                { beneficiary: addr2.address, amount: parseEther("100"), },
             ];
 
-            const overrides: PayableOverrides = {
-                value: ethers.utils.parseEther("151"),
-            };
-
-            const initialBalances = await Promise.all([
-                addr1.getBalance(),
-                addr2.getBalance(),
-            ]);
+            const overrides: PayableOverrides = { value: parseEther("150"), };
+            const initialBalances = await Promise.all([ addr1.getBalance(), addr2.getBalance(), ]);
 
             await splitSend.sendEtherToMultipleBeneficiaries(
                 testGreeter.address,
@@ -123,93 +104,156 @@ describe("SplitSend", function () {
                 overrides
             );
 
-            const finalBalances = await Promise.all([
-                addr1.getBalance(),
-                addr2.getBalance(),
-            ]);
-            const difference = finalBalances.map((v, i) =>
-                v.sub(initialBalances[i])
-            );
+            const finalBalances = await Promise.all([ addr1.getBalance(), addr2.getBalance(), ]);
+            const difference = finalBalances.map((v, i) => v.sub(initialBalances[i]));
 
-            expect(difference).to.eql(
-                ["50", "100"].map(ethers.utils.parseEther)
-            );
+            expect(difference).to.eql(["50", "100"].map(parseEther));
+        });
+
+        it("Try to send ether successfully but fail callback contract payload", async function () {
+            const payments = [ { beneficiary: addr1.address, amount: parseEther("1"), }, ];
+
+            const overrides: PayableOverrides = { value: parseEther("1"), };
+            const initialBalance = await addr1.getBalance();
+            await expect(splitSend.sendEtherToMultipleBeneficiaries(
+                testGreeter.address,
+                greetInterface.encodeFunctionData("fail", []),
+                payments,
+                overrides
+            )).to.be.revertedWith("transaction failed");
+            const finalBalance = await addr1.getBalance();
+            const difference = finalBalance.sub(initialBalance);
+
+            // no ether amount should be transferred in this case.
+            expect(difference).to.equal(parseEther("0"));
         });
     });
 
-    describe("Split ERC20", () => {
+    describe("Test splitting ERC20 tokens", () => {
         // test token
-        let ttt: Contract;
+        let tttErc20: Contract;
 
         beforeEach(async function () {
-            const TTT = await ethers.getContractFactory("TestToken");
-            ttt = await TTT.deploy("Test Token", "TTT");
+            const TTTERC20 = await ethers.getContractFactory("TestToken");
+            tttErc20 = await TTTERC20.deploy("Test Token", "TTT");
 
-            await ttt.deployed();
-
-            // allow the smart contract to spend on behalf of the owner
-            await ttt.approve(splitSend.address, MAX_UINT256);
+            await tttErc20.deployed();
         });
 
-        it("Insufficient ERC20 splitting", async function () {
+        it("Try sending token exceeding total supply to beneficiaries", async function () {
+            // allow the smart contract to spend on behalf of the owner
+            await tttErc20.approve(splitSend.address, MAX_UINT256);
+
             const payments = [addr1, addr2].map((a) => ({
                 beneficiary: a.address,
-                amount: 1000000,
+                amount: 100000000,
             }));
 
-            await expect(
-                splitSend.sendTokenToMultipleBeneficiaries(
-                    testGreeter.address,
-                    greetInterface.encodeFunctionData("greet", ["WOZAK"]),
-                    ttt.address,
-                    payments
-                )
-            ).to.be.reverted;
+            await expect(splitSend.sendTokenToMultipleBeneficiaries(
+                testGreeter.address,
+                greetInterface.encodeFunctionData("greet", ["WOZAK"]),
+                tttErc20.address,
+                payments
+            )).to.be.revertedWith("ERC20: transfer amount exceeds balance");
 
-            const balances = await Promise.all([
-                ttt.balanceOf(addr1.address),
-                ttt.balanceOf(addr2.address),
-            ]);
+            const balances = await Promise.all([tttErc20.balanceOf(addr1.address), tttErc20.balanceOf(addr2.address), ]);
             expect(balances).to.eql([0, 0].map(BigNumber.from));
         });
 
-        it("Evenly split ERC20 successfully", async function () {
+        it("Try sending token exceeding allowed approved amount to beneficiaries", async function () {
+            // allow the smart contract to spend on behalf of the owner
+            await tttErc20.approve(splitSend.address, 2);
+
             const payments = [addr1, addr2].map((a) => ({
                 beneficiary: a.address,
-                amount: 100,
+                amount: 10,
+            }));
+
+            await expect(splitSend.sendTokenToMultipleBeneficiaries(
+                testGreeter.address,
+                greetInterface.encodeFunctionData("greet", ["WOZAK"]),
+                tttErc20.address,
+                payments
+            )).to.be.revertedWith("ERC20: transfer amount exceeds allowance");
+
+            const balances = await Promise.all([tttErc20.balanceOf(addr1.address), tttErc20.balanceOf(addr2.address), ]);
+            expect(balances).to.eql([0, 0].map(BigNumber.from));
+        });
+
+        it("Try send token amounts only sufficiant for 1 beneficiary out of 2 beneficiaries", async function () {
+            // allow the smart contract to spend on behalf of the owner
+            await tttErc20.approve(splitSend.address, 2);
+
+            const payments = [
+                { beneficiary: addr1.address, amount: 2 },
+                { beneficiary: addr2.address, amount: 1 },
+            ];
+
+            await expect(splitSend.sendTokenToMultipleBeneficiaries(
+                testGreeter.address,
+                greetInterface.encodeFunctionData("greet", ["WOZAK"]),
+                tttErc20.address,
+                payments
+            )).to.be.revertedWith("ERC20: transfer amount exceeds allowance");
+
+            const balances = await Promise.all([tttErc20.balanceOf(addr1.address), tttErc20.balanceOf(addr2.address), ]);
+            expect(balances).to.eql([0, 0].map(BigNumber.from));
+        });
+
+        it("Try to evenly split 2 tokens to 2 beneficiaries", async function () {
+            // allow the smart contract to spend on behalf of the owner
+            await tttErc20.approve(splitSend.address, 2);
+
+            const payments = [addr1, addr2].map((a) => ({
+                beneficiary: a.address,
+                amount: 1,
             }));
 
             await splitSend.sendTokenToMultipleBeneficiaries(
                 testGreeter.address,
                 greetInterface.encodeFunctionData("greet", ["WOZAK"]),
-                ttt.address,
+                tttErc20.address,
                 payments
             );
-            const balances = await Promise.all([
-                ttt.balanceOf(addr1.address),
-                ttt.balanceOf(addr2.address),
-            ]);
-            expect(balances).to.eql([100, 100].map(BigNumber.from));
+            const balances = await Promise.all([ tttErc20.balanceOf(addr1.address), tttErc20.balanceOf(addr2.address), ]);
+            expect(balances).to.eql([1, 1].map(BigNumber.from));
         });
 
-        it("Unevenly split 150 ERC20s", async function () {
+        it("Try to unevenly split 2 tokens to 2 beneficiaries", async function () {
+            // allow the smart contract to spend on behalf of the owner
+            await tttErc20.approve(splitSend.address, 3);
+
             const payments = [
-                { beneficiary: addr1.address, amount: 50 },
-                { beneficiary: addr2.address, amount: 100 },
+                { beneficiary: addr1.address, amount: 2 },
+                { beneficiary: addr2.address, amount: 1 },
             ];
 
             await splitSend.sendTokenToMultipleBeneficiaries(
                 testGreeter.address,
                 greetInterface.encodeFunctionData("greet", ["WOZAK"]),
-                ttt.address,
+                tttErc20.address,
                 payments
             );
 
-            const balances = await Promise.all([
-                ttt.balanceOf(addr1.address),
-                ttt.balanceOf(addr2.address),
-            ]);
-            expect(balances).to.eql([50, 100].map(BigNumber.from));
+            const balances = await Promise.all([ tttErc20.balanceOf(addr1.address), tttErc20.balanceOf(addr2.address), ]);
+            expect(balances).to.eql([2, 1].map(BigNumber.from));
+        });
+
+        it("Try to send ERC20 tokens successfully but fail callback contract payload", async function () {
+            // allow the smart contract to spend on behalf of the owner
+            await tttErc20.approve(splitSend.address, 3);
+            const payments = [ { beneficiary: addr1.address, amount: 1 }, ];
+            
+            await expect(splitSend.sendTokenToMultipleBeneficiaries(
+                testGreeter.address,
+                greetInterface.encodeFunctionData("fail", []),
+                tttErc20.address,
+                payments
+            )).to.be.revertedWith("transaction failed");
+            const balance = await tttErc20.balanceOf(addr1.address);
+
+            // no ERC20 token amount should be transferred in this case.
+            expect(balance).to.equal(0);
         });
     });
 });
