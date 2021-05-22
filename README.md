@@ -2,6 +2,11 @@
 
 `SplitSend.sol` - contract to allow batching payments of ERC20 or Ethers as well as execute function calls to a specific target contract.
 
+This is useful for
+
+- direct payment of multiple recipient addresses
+- calling a smart contract function (such as withdrawing from a liquidity pool or a call to a dex exchange) and split the resulting payment to multiple recipients in one go.
+
 The [solidity code](https://github.com/Swoorup/eth-batcher-contracts/blob/master/contracts/SplitSend.sol) is here.
 
 The contract contains 2 functions to split ethereum or ERC20 tokens and send as a batch, while also allowing to execute a target contract with the payload.
