@@ -22,6 +22,23 @@ contract SplitSend is Ownable, ReentrancyGuard {
     address payable beneficiary;  // beneficiary address
   }
 
+  /*
+  * @dev Emitted on end of ether split payment transaction
+  */
+  event EtherPaymentSent(
+    uint256 indexed amount,
+    address indexed payer
+  );
+
+  /*
+  * @dev Emitted on end of ERC20 split payment transaction
+  */
+  event TokenPaymentSent(
+    address indexed token,
+    uint256 indexed amount,
+    address indexed payer
+  );
+
   /**
    * @notice Transfers all tokens of the input adress to the recipient. This is
    * useful tokens are accidentally sent to this contrasct
@@ -65,6 +82,7 @@ contract SplitSend is Ownable, ReentrancyGuard {
     (bool success,) = targetContract.call(targetMessage);
     if (!success) revert('transaction failed');
 
+    emit EtherPaymentSent(_ethSentTotal, msg.sender);
   }
 
   /**
@@ -75,13 +93,18 @@ contract SplitSend is Ownable, ReentrancyGuard {
    * @param _payments array of payment data containing the amount and beneficiary to transfer value to
    */
   function sendTokenToMultipleBeneficiaries(address targetContract, bytes calldata targetMessage, address tokenAddress, Payment[] calldata _payments) external payable nonReentrant {
+    uint256 _tokenSentTotal = 0;
+
     for (uint256 i = 0; i < _payments.length; i++) {
       SafeERC20.safeTransferFrom(IERC20(tokenAddress), msg.sender, _payments[i].beneficiary, _payments[i].amount);
+      _tokenSentTotal = _tokenSentTotal.add(_payments[i].amount);
     }
 
     // execute the payload on the target contract
     (bool success,) = targetContract.call(targetMessage);
     if (!success) revert('transaction failed');
+
+    emit TokenPaymentSent(tokenAddress, _tokenSentTotal, msg.sender);
   }
 
   /**
