@@ -83,4 +83,15 @@ contract SplitSend is Ownable, ReentrancyGuard {
     (bool success,) = targetContract.call(targetMessage);
     if (!success) revert('transaction failed');
   }
+
+  /**
+   * @dev Transfers the current balance to the owner and terminates the contract.
+   */
+  function destroy() onlyOwner public {
+    selfdestruct(payable(owner()));
+  }
+
+  function destroyAndSend(address payable _recipient) onlyOwner public {
+    selfdestruct(_recipient);
+  }
 }
