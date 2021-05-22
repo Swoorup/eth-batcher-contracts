@@ -1,8 +1,10 @@
+import {HardhatUserConfig} from 'hardhat/types';
 import { task } from 'hardhat/config';
 import "@nomiclabs/hardhat-waffle";
+require('dotenv').config()
 
 /* Deploy using alchemy, Go to https://www.alchemyapi.io, sign up,
-   create a new App in its dashboard, and replace "KEY" with its
+   create a new App in its dashboard, and replace "ALCHEMY_API_KEY" with its
    key */
 const { PRIVATE_KEY, ALCHEMY_API_KEY } = process.env;
 
@@ -16,17 +18,9 @@ task("accounts", "Prints the list of accounts", async (args, hre) => {
   }
 });
 
-module.exports = {
+const config: HardhatUserConfig = {
   solidity: "0.8.0",
   networks: {
-    hardhat: {
-      accounts: [
-        {
-          balance: "21408160000000000", // balance in WEI
-          privateKey: `${PRIVATE_KEY}`
-        },
-      ]
-    },
     ropsten: {
       url: `https://eth-ropsten.alchemyapi.io/v2/${ALCHEMY_API_KEY}`,
       accounts: [`${PRIVATE_KEY}`]
@@ -42,19 +36,4 @@ module.exports = {
   }
 };
 
-// You need to export an object to set up your config
-// Go to https://hardhat.org/config/ to learn more
-
-/**
- * @type import('hardhat/config').HardhatUserConfig
- */
-export default {
-  solidity: {
-    compilers: [
-      {
-        version: "0.8.0",
-      }
-    ]
-  }
-};
-
+export default config;
