@@ -1,5 +1,7 @@
 # Content
 
+## Ethereum SplitSend contract
+
 `SplitSend.sol` - contract to allow batching payments of ERC20 or Ethers as well as execute function calls to a specific target contract.
 
 This is useful for
@@ -23,7 +25,7 @@ The functions are:
   * Send ERC20 tokens to an array of payment struct of payable address and amount.
   * The msg.sender must approve this contract to spend at least the total sum of payment amount of all beneficiaries.
 
-## Usage
+### Usage
 
 Install the package `npm install @sytherax/eth-batcher-contracts` in your contracts npm folder.
 
@@ -36,7 +38,7 @@ import "@sytherax/eth-batcher-contracts/contracts/SplitSend.sol";
 contract MyContract is SplitSend { }
 ```
 
-## Building
+### Building
 
 ### Install Dependencies
 

@@ -1,7 +1,7 @@
 import {HardhatUserConfig} from 'hardhat/types';
 import { task } from 'hardhat/config';
 import "@nomiclabs/hardhat-waffle";
-require('dotenv').config()
+require('dotenv').config({ path: require('find-config')('.env') })
 
 /* Deploy using alchemy, Go to https://www.alchemyapi.io, sign up,
    create a new App in its dashboard, and replace "ALCHEMY_API_KEY" with its

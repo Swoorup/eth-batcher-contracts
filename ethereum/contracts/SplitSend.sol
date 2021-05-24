@@ -26,7 +26,7 @@ contract SplitSend is Ownable, ReentrancyGuard {
   * @dev Emitted on end of ether split payment transaction
   */
   event EtherPaymentSent(
-    address targetContract,
+    address indexed targetContract,
     bytes targetMessage,
     address indexed payer,
     uint256 indexed totalAmount
@@ -36,11 +36,11 @@ contract SplitSend is Ownable, ReentrancyGuard {
   * @dev Emitted on end of ERC20 split payment transaction
   */
   event TokenPaymentSent(
-    address targetContract,
+    address indexed targetContract,
     bytes targetMessage,
     address indexed token,
     address indexed payer,
-    uint256 indexed totalAmount
+    uint256 totalAmount
   );
 
   /**
