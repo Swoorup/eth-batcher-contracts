@@ -1,4 +1,6 @@
 import {HardhatUserConfig} from 'hardhat/types';
+import 'hardhat-deploy';
+import '@nomiclabs/hardhat-ethers';
 import { task } from 'hardhat/config';
 import "@nomiclabs/hardhat-waffle";
 require('dotenv').config({ path: require('find-config')('.env') })
