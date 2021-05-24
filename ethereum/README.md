@@ -40,11 +40,18 @@ contract MyContract is SplitSend { }
 
 ### Building
 
-### Install Dependencies
+#### Install Dependencies
 
 ```shell
 npm install
 ```
+
+#### Testing
+
+```shell
+npm test
+```
+
 
 ### Contract Deployment
 
@@ -64,10 +71,4 @@ For mainnet launch, you would want to do something like follows:
 
 ```shell
 npx hardhat deploy --network mainnet --tags prod
-```
-
-### Testing
-
-```shell
-npm test
 ```
