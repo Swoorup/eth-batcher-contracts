@@ -1,0 +1,30 @@
+{
+  "name": "splitsend-example",
+  "version": "1.0.0",
+  "description": "Web3 SplitSend Usage example",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Swoorup/eth-batcher-contracts.git"
+  },
+  "keywords": [
+    "solidity",
+    "ethereum",
+    "web3"
+  ],
+  "author": "Swoorup Joshi",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Swoorup/eth-batcher-contracts/issues"
+  },
+  "homepage": "https://github.com/Swoorup/eth-batcher-contracts#readme",
+  "dependencies": {
+    "dotenv": "^10.0.0",
+    "find-config": "^1.0.0",
+    "web3": "^1.3.6"
+  }
+}

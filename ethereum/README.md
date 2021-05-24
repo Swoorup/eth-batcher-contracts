@@ -15,15 +15,15 @@ The contract contains 2 functions to split ethereum or ERC20 tokens and send as 
 
 The functions are:
 
-* `function sendEtherToMultipleBeneficiaries(address targetContract, bytes calldata targetMessage, Payment[] calldata _payments) external payable nonReentrant`
+- `function sendEtherToMultipleBeneficiaries(address targetContract, bytes calldata targetMessage, Payment[] calldata _payments) external payable nonReentrant`
 
-  * Send ethers to an array of payment struct of payable address and amount.
-  * Amount of ether sent to this contract must equal the sum of payment amount of all beneficiaries or entire transaction is reverted.
+  - Send ethers to an array of payment struct of payable address and amount.
+  - Amount of ether sent to this contract must equal the sum of payment amount of all beneficiaries or entire transaction is reverted.
 
-* `function sendTokenToMultipleBeneficiaries(address targetContract, bytes calldata targetMessage, address tokenAddress, Payment[] calldata _payments) external payable nonReentrant`
+- `function sendTokenToMultipleBeneficiaries(address targetContract, bytes calldata targetMessage, address tokenAddress, Payment[] calldata _payments) external payable nonReentrant`
 
-  * Send ERC20 tokens to an array of payment struct of payable address and amount.
-  * The msg.sender must approve this contract to spend at least the total sum of payment amount of all beneficiaries.
+  - Send ERC20 tokens to an array of payment struct of payable address and amount.
+  - The msg.sender must approve this contract to spend at least the total sum of payment amount of all beneficiaries.
 
 ### Usage
 
@@ -44,6 +44,26 @@ contract MyContract is SplitSend { }
 
 ```shell
 npm install
+```
+
+### Contract Deployment
+
+If running locally you can execute to deploy all deployments inside `deploy` folder to localhost network like follows.
+
+```shell
+npx hardhat deploy --network localhost
+```
+
+If you want to deploy test contracts for the web3 examples to run. You can run all deploys with the tag `dev`
+
+```shell
+npx hardhat deploy --network localhost --tags dev
+```
+
+For mainnet launch, you would want to do something like follows:
+
+```shell
+npx hardhat deploy --network mainnet --tags prod
 ```
 
 ### Testing
