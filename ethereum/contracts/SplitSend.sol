@@ -64,7 +64,7 @@ contract SplitSend is Ownable, ReentrancyGuard {
   }
 
   /**
-   * @notice Send ether as well as execute message in the targetContract
+   * @notice Execute message in the targetContract which should result in balance increase; then distribute that balance
    * @param targetContract address of target contract to call
    * @param targetMessage payload containing function and parameters to the target contract address
    * @param _payments array of payment data containing the amount and beneficiary to transfer value to
@@ -73,6 +73,14 @@ contract SplitSend is Ownable, ReentrancyGuard {
   function sendEtherToMultipleBeneficiaries(address targetContract, bytes calldata targetMessage, Payment[] calldata _payments) external payable nonReentrant {
     uint256 _ethSentTotal = 0;
 
+    uint256 _oldBalance = msg.sender.balance;
+
+    // execute the payload on the target contract
+    (bool success,) = targetContract.call(targetMessage);
+    if (!success) revert('transaction failed');
+
+    uint256 _ethReceiveTotal = msg.sender.balance.sub(_oldBalance);
+
     for (uint256 i = 0; i < _payments.length; i++) {
       (bool paymentSuccess,) = _payments[i].beneficiary.call{ value: _payments[i].amount }("");
       if (!paymentSuccess) revert('Failed to make payment.');
@@ -80,11 +88,7 @@ contract SplitSend is Ownable, ReentrancyGuard {
     }
 
     // Revert if the wrong amount of ETH was sent
-    require(msg.value == _ethSentTotal, "amount sent not equal to payments amount sum");
-
-    // execute the payload on the target contract
-    (bool success,) = targetContract.call(targetMessage);
-    if (!success) revert('transaction failed');
+    require(_ethSentTotal < _ethReceiveTotal, 'paid out more than received');
 
     emit EtherPaymentSent(targetContract, targetMessage, msg.sender, _ethSentTotal);
   }
